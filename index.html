@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="interview">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Info Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .info {
+            margin-bottom: 10px;
+        }
+        .info label {
+            font-weight: bold;
+        }
+        .info span {
+            margin-left: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+<body ng-controller="DeviceController as deviceCtrl">
+    <div class="container">
+        <h1>Device Info</h1>
+        <div class="info">
+            <label>Browser:</label><span>{{ deviceCtrl.deviceInfo.browser }}</span>
+        </div>
+        <div class="info">
+            <label>Browser Version:</label><span>{{ deviceCtrl.deviceInfo.browser_version }}</span>
+        </div>
+        <div class="info">
+            <label>Operating System:</label><span>{{ deviceCtrl.deviceInfo.os }}</span>
+        </div>
+        <div class="info">
+            <label>OS Version:</label><span>{{ deviceCtrl.deviceInfo.os_version }}</span>
+        </div>
+        <div class="info">
+            <label>Device:</label><span>{{ deviceCtrl.deviceInfo.device }}</span>
+        </div>
+        <div class="info">
+            <label>Is Mobile:</label><span>{{ deviceCtrl.deviceInfo.isMobile() ? 'Yes' : 'No' }}</span>
+        </div>
+        <div class="info">
+            <label>Is Tablet:</label><span>{{ deviceCtrl.deviceInfo.isTablet() ? 'Yes' : 'No' }}</span>
+        </div>
+        <div class="info">
+            <label>Is Desktop:</label><span>{{ deviceCtrl.deviceInfo.isDesktop() ? 'Yes' : 'No' }}</span>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script>
+        (function () {
+            "use strict";
+
+            angular
+                .module("interview", [])
+                .controller("DeviceController", DeviceController)
+                .factory("deviceDetector", deviceDetector);
+
+            // Injecting the deviceDetector service into the controller
+            DeviceController.$inject = ['deviceDetector'];
+
+            function DeviceController(deviceDetector) {
+                var vm = this;
+                vm.deviceInfo = deviceDetector;
+            }
+
+            function deviceDetector() {
+                var userAgent = navigator.userAgent,
+                    platform = navigator.platform;
+                var service = {
+                    browser: browserInfo().name,
+                    browser_version: browserInfo().version,
+                    os: detectOS().name,
+                    os_version: detectOS().version,
+                    device: detectDevice(),
+                    isMobile: isMobilePhone,
+                    isTablet: isTabletDevice,
+                    isDesktop: isDesktopDevice,
+                };
+
+                return service;
+
+                // Browser detection functions (same as provided in your original code)
+                function browserInfo() { 
+                    // Implementation from the original code 
+                    var browserName = 'Unknown Browser';
+                    var browserVersion = 'Unknown Version';
+                    if (/MSIE|Trident/.test(userAgent)) {
+                        browserName = 'Internet Explorer';
+                        browserVersion = /MSIE\s(\d+\.\d+)/.test(userAgent) ? RegExp.$1 : /rv:(\d+\.\d+)/.test(userAgent) ? RegExp.$1 : 'Unknown Version';
+                    } else if (/Edge\/\d+/.test(userAgent)) {
+                        browserName = 'Microsoft Edge (Legacy)';
+                        browserVersion = userAgent.match(/Edge\/(\d+\.\d+)/)[1];
+                    } else if (/Edg\/\d+/.test(userAgent)) {
+                        browserName = 'Microsoft Edge (Chromium)';
+                        browserVersion = userAgent.match(/Edg\/(\d+\.\d+)/)[1];
+                    } else if (/Chrome\/\d+/.test(userAgent) && !/OPR|Edg/.test(userAgent)) {
+                        browserName = 'Chrome';
+                        browserVersion = userAgent.match(/Chrome\/(\d+\.\d+)/)[1];
+                    } else if (/Firefox\/\d+/.test(userAgent)) {
+                        browserName = 'Mozilla Firefox';
+                        browserVersion = userAgent.match(/Firefox\/(\d+\.\d+)/)[1];
+                    } else if (/Safari\/\d+/.test(userAgent) && !/Chrome/.test(userAgent)) {
+                        browserName = 'Safari';
+                        browserVersion = userAgent.match(/Version\/(\d+\.\d+)/)[1];
+                    } else if (/Opera|OPR\/\d+/.test(userAgent)) {
+                        browserName = 'Opera';
+                        browserVersion = /OPR\/(\d+\.\d+)/.test(userAgent) ? userAgent.match(/OPR\/(\d+\.\d+)/)[1] : userAgent.match(/Opera\/(\d+\.\d+)/)[1];
+                    }
+                    return {
+                        name: browserName,
+                        version: browserVersion
+                    };
+                }
+
+                function detectOS() {
+                    var osName = 'Unknown OS';
+                    var osVersion = 'Unknown Version';
+
+                    if (/Win/.test(platform)) {
+                        osName = 'Windows';
+                        if (/Windows NT 10/.test(userAgent)) {
+                            osVersion = '10';
+                        } else if (/Windows NT 6.3/.test(userAgent)) {
+                            osVersion = '8.1';
+                        } else if (/Windows NT 6.2/.test(userAgent)) {
+                            osVersion = '8';
+                        } else if (/Windows NT 6.1/.test(userAgent)) {
+                            osVersion = '7';
+                        } else if (/Windows NT 6.0/.test(userAgent)) {
+                            osVersion = 'Vista';
+                        } else if (/Windows NT 5.1/.test(userAgent)) {
+                            osVersion = 'XP';
+                        }
+                    } else if (/Mac/.test(platform)) {
+                        osName = 'macOS';
+                        var macVersion = userAgent.match(/Mac OS X (\d+[\._]\d+)/);
+                        if (macVersion) {
+                            osVersion = macVersion[1].replace('_', '.');
+                        }
+                    } else if (/iPhone|iPad|iPod/.test(platform)) {
+                        osName = 'iOS';
+                        var iosVersion = userAgent.match(/OS (\d+_\d+)/);
+                        if (iosVersion) {
+                            osVersion = iosVersion[1].replace('_', '.');
+                        }
+                    } else if (/Android/.test(userAgent)) {
+                        osName = 'Android';
+                        var androidVersion = userAgent.match(/Android (\d+\.\d+)/);
+                        if (androidVersion) {
+                            osVersion = androidVersion[1];
+                        }
+                    } else if (/Linux/.test(platform)) {
+                        osName = 'Linux';
+                    } else if (/CrOS/.test(userAgent)) {
+                        osName = 'Chrome OS';
+                        var chromeOSVersion = userAgent.match(/CrOS\s[\w]+\s(\d+\.\d+\.\d+)/);
+                        if (chromeOSVersion) {
+                            osVersion = chromeOSVersion[1];
+                        }
+                    }
+                    return {
+                        name: osName,
+                        version: osVersion
+                    };
+                }
+
+                function detectDevice() {
+                    var userAgent = navigator.userAgent.toLowerCase();
+                    var platform = navigator.platform.toLowerCase();
+                    var deviceName = 'Unknown Device';
+                    if (/iphone/.test(userAgent)) {
+                        deviceName = 'iPhone';
+                    } else if (/ipad/.test(userAgent) || (platform === 'macintel' && navigator.maxTouchPoints > 1)) {
+                        deviceName = 'iPad';
+                    } else if (/ipod/.test(userAgent)) {
+                        deviceName = 'iPod';
+                    } else if (/android/.test(userAgent)) {
+                        deviceName = /mobile/.test(userAgent) ? 'Android Phone' : 'Android Tablet';
+                    } else if (/mac/.test(platform)) {
+                        deviceName = 'Mac';
+                    } else if (/win/.test(platform)) {
+                        deviceName = 'Windows PC';
+                    } else if (/linux/.test(platform)) {
+                        deviceName = 'Linux PC';
+                    } else if (/cros/.test(userAgent)) {
+                        deviceName = 'Chrome OS Device';
+                    }
+                    return deviceName;
+                }
+
+                function isMobilePhone() {
+                    return (/android/.test(userAgent) && /mobile/.test(userAgent)) || /iphone/.test(userAgent) || /ipod/.test(userAgent);
+                }
+
+                function isTabletDevice() {
+                    return (/android/.test(userAgent) && !/mobile/.test(userAgent)) || /ipad/.test(userAgent) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
+                }
+
+                function isDesktopDevice() {
+                    return !isMobilePhone() && !isTabletDevice();
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
