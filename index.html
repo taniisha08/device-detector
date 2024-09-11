@@ -78,16 +78,22 @@
                 .controller("DeviceController", DeviceController)
                 .factory("deviceDetector", deviceDetector);
 
-            DeviceController.$inject = ['deviceDetector'];
+            DeviceController.$inject = ['deviceDetector', '$scope'];
 
-            function DeviceController(deviceDetector) {
+            function DeviceController(deviceDetector, $scope) {
                 var vm = this;
-                vm.deviceInfo = deviceDetector;
+                vm.deviceInfo = {};
+
+                // Apply the device info to the controller after it is detected
+                $scope.$applyAsync(function() {
+                    vm.deviceInfo = deviceDetector;
+                });
             }
 
             function deviceDetector() {
                 var userAgent = navigator.userAgent.toLowerCase(),
                     platform = navigator.platform.toLowerCase();
+                
                 var service = {
                     browser: getBrowser().name,
                     browser_version: getBrowser().version,
@@ -161,7 +167,7 @@
                 }
 
                 function isMobile() {
-                    return /android/.test(userAgent) && /mobile/.test(userAgent) || /iphone|ipod/.test(userAgent);
+                    return /iphone|ipod/.test(userAgent) || (/android/.test(userAgent) && /mobile/.test(userAgent));
                 }
 
                 function isTablet() {
